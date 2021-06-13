@@ -13,9 +13,9 @@ $ conda install -c rdkit rdkit-postgresql
 ```bash
 $ initdb -D ~/postgresdata
 $ /path/to/postgres -D ~/postgresdata
+# extract db
+$ cd chembl_28/chembl_28_postgresql
+$ /path/to/psql -U postgres
 ```
 
 Start by downloading and installing the postgresql dump from the ChEMBL website ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest
-
-
- 
