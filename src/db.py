@@ -12,7 +12,8 @@ class GetQuery:
     fp_type: Union[bool, str] = False
     sort_by_similarity: bool = False
 
-    def get_function_name(self):
+    @property
+    def get_fp_function_name(self) -> str:
         fp_dict = {"mfp2": "morganbv_fp", "ffp2": "featmorganbv_fp", "fps": "torsionbv_fp"}
         try:
             function_name = fp_dict[self.fp_type]
@@ -20,9 +21,9 @@ class GetQuery:
             return "FP doesn't exist"
         return function_name
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.search_type == "similarity":
-            function_name = self.get_function_name()
+            function_name = self.get_fp_function_name
             if not self.sort_by_similarity:
                 return (
                     f"select * from rdk.fps where {self.fp_type}%{function_name}('{self.mol_smi}')"
@@ -35,11 +36,14 @@ class GetQuery:
             if not self.sort_by_similarity:
                 return f"select * from rdk.mols where m@>'{self.mol_smi}'"
             else:
-                function_name = self.get_function_name()
+                function_name = self.get_fp_function_name
                 count_tanimoto = (
                     f"tanimoto_sml({function_name}(m), {function_name}('{self.mol_smi}'))"
                 )
-                return f"select molregno, m, {count_tanimoto} as tanimoto from rdk.mols where m@>'{self.mol_smi}' order by {count_tanimoto} DESC"
+                return (
+                    f"select molregno, m, {count_tanimoto} as tanimoto from rdk.mols where m@>'{self.mol_smi}' "
+                    f"order by {count_tanimoto} DESC"
+                )
 
         if self.search_type == "equal":
             pass
@@ -51,14 +55,14 @@ class SearchTime:
         conn = psycopg2.connect(database=self.database_name)
         self.curs = conn.cursor()
 
-    def get_fetchone_time(self, query):
+    def get_fetchone_time(self, query: str) -> float:
         start_time = time()
         self.curs.execute(query)
-        print(self.curs.fetchone())
+        self.curs.fetchone()
         end_time = time()
         return end_time - start_time
 
-    def get_fetchall_time(self, query):
+    def get_fetchall_time(self, query: str) -> float:
         start_time = time()
         self.curs.execute(query)
         self.curs.fetchall()
@@ -72,7 +76,7 @@ class SearchTime:
         first_in: bool = True,
         fp_type: Union[bool, str] = False,
         sort_by_similarity: bool = False,
-    ):
+    ) -> float:
         query = str(
             GetQuery(
                 mol_smi=mol_smi,
