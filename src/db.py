@@ -15,6 +15,10 @@ class GetQuery:
         if self.search_type == "similarity":
             if self.fp_type == "mfp2":
                 return f"select * from rdk.fps where mfp2%morganbv_fp('{self.mol_smi}')"
+            if self.fp_type == "ffp2":
+                return f"select * from rdk.fps where ffp2%featmorganbv_fp('{self.mol_smi}')"
+            if self.fp_type == "torsionbv":
+                return f"select * from rdk.fps where torsionbv%torsionbv_fp('{self.mol_smi}')"
         if self.search_type == "substructure":
             return f"select * from rdk.mols where m@>'{self.mol_smi}'"
         if self.search_type == "equal":
