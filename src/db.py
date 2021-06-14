@@ -31,8 +31,9 @@ class SearchTime:
         conn = psycopg2.connect(database=self.database_name)
         self.curs = conn.cursor()
 
-    def get_fetchone_time(self):
+    def get_fetchone_time(self, query):
         start_time = time()
+        self.curs.execute(query)
         self.curs.fetchone()
         end_time = time()
         return end_time - start_time
@@ -45,6 +46,5 @@ class SearchTime:
         fp_type: Union[bool, str] = False,
     ):
         query = str(GetQuery(mol_smi=mol_smi, search_type=search_type, fp_type=fp_type))
-        self.curs.execute(query)
         if first_in:
-            return self.get_fetchone_time()
+            return self.get_fetchone_time(query)
