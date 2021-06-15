@@ -14,7 +14,7 @@ class GetQuery:
 
     @property
     def get_fp_function_name(self) -> str:
-        fp_dict = {"mfp2": "morganbv_fp", "ffp2": "featmorganbv_fp", "fps": "torsionbv_fp"}
+        fp_dict = {"mfp2": "morganbv_fp", "ffp2": "featmorganbv_fp", "torsionbv": "torsionbv_fp"}
         try:
             function_name = fp_dict[self.fp_type]
         except KeyError:
@@ -41,8 +41,8 @@ class GetQuery:
                     f"tanimoto_sml({function_name}(m), {function_name}('{self.mol_smi}'))"
                 )
                 return (
-                    f"select molregno, m, {count_tanimoto} as tanimoto from rdk.mols where m@>'{self.mol_smi}' "
-                    f"order by {count_tanimoto} DESC"
+                    f"select molregno, m, {count_tanimoto} t from rdk.mols where m@>'{self.mol_smi}' "
+                    f"order by t DESC"
                 )
 
         if self.search_type == "equal":
