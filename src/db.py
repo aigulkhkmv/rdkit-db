@@ -11,6 +11,7 @@ class GetQuery:
     search_type: str
     fp_type: Union[bool, str] = False
     sort_by_similarity: bool = False
+    limit: Union[int, str] = ""
 
     @property
     def get_fp_function_name(self) -> str:
@@ -22,27 +23,26 @@ class GetQuery:
         return function_name
 
     def __str__(self) -> str:
+        limit = ""
+        if self.limit:
+            limit = f" limit {self.limit}"
         if self.search_type == "similarity":
             function_name = self.get_fp_function_name
             if not self.sort_by_similarity:
-                return (
-                    f"select * from rdk.fps where {self.fp_type}%{function_name}('{self.mol_smi}')"
-                )
+                return f"select * from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}'){ limit}"
             else:
                 if self.fp_type == "mfp2":
-                    return f"select * from get_mfp2_neighbors('{self.mol_smi}')"
+                    return f"select * from get_mfp2_neighbors('{self.mol_smi}'){ limit}"
 
         if self.search_type == "substructure":
             if not self.sort_by_similarity:
-                return f"select * from rdk.mols where m@>'{self.mol_smi}'"
+                return f"select * from public.mols where m@>'{self.mol_smi}'{ limit}"
             else:
                 function_name = self.get_fp_function_name
-                count_tanimoto = (
-                    f"tanimoto_sml({function_name}(m), {function_name}('{self.mol_smi}'))"
-                )
+                count_tanimoto = f"tanimoto_sml({function_name}(m), {function_name}('{self.mol_smi}'))"
                 return (
-                    f"select molregno, m, {count_tanimoto} t from rdk.mols where m@>'{self.mol_smi}' "
-                    f"order by t DESC"
+                    f"select id, m, {count_tanimoto} t from public.mols where m@>'{self.mol_smi}' "
+                    f"order by t DESC{ limit}"
                 )
 
         if self.search_type == "equal":
@@ -76,6 +76,7 @@ class SearchTime:
         first_in: bool = True,
         fp_type: Union[bool, str] = False,
         sort_by_similarity: bool = False,
+        limit:  Union[int, str] = ""
     ) -> float:
         query = str(
             GetQuery(
@@ -83,6 +84,7 @@ class SearchTime:
                 search_type=search_type,
                 fp_type=fp_type,
                 sort_by_similarity=sort_by_similarity,
+                limit=limit
             )
         )
         if first_in:

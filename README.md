@@ -9,13 +9,23 @@ $ conda install -c conda-forge postgresql
 $ conda install -c rdkit rdkit-postgresql
 ```
 
-#### init database:
 ```bash
-$ initdb -D ~/postgresdata
-$ /path/to/postgres -D ~/postgresdata
+$ work_env/bin/initdb -D path/to/chembl_28
+$ work_env/bin/pg_ctl -D path/to/chembl_28 start
+$ work_env/bin/createdb chembl_28
 # extract db
-$ cd chembl_28/chembl_28_postgresql
-$ /path/to/psql -U postgres
+$ work_env/bin/psql -c 'create extension rdkit' chembl_28
 ```
 
-Start by downloading and installing the postgresql dump from the ChEMBL website ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest
+Create new database from file with smiles:
+```bash
+$ work_env/bin/psql -c 'create table raw_data (id SERIAL, smiles text)' chembl_28
+$ while read line; do echo $line; done < chembl.txt | work_env/bin/psql -c "copy raw_data (smiles) from stdin" chembl_28
+```
+Add molecules, gist-index and fingerprints to the database. In postgresql console:
+```bash
+$ select * into mols from (select id,mol_from_smiles(smiles::cstring) m from raw_data) tmp where m is not null;
+$ create index molidx on public.mols using gist(m);
+```
+
+Postgresql dump from the ChEMBL website ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest
