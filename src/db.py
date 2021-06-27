@@ -39,7 +39,9 @@ class GetQuery:
                 return f"select * from public.mols where m@>'{self.mol_smi}'{ limit}"
             else:
                 function_name = self.get_fp_function_name
-                count_tanimoto = f"tanimoto_sml({function_name}(m), {function_name}('{self.mol_smi}'))"
+                count_tanimoto = (
+                    f"tanimoto_sml({function_name}(m), {function_name}('{self.mol_smi}'))"
+                )
                 return (
                     f"select id, m, {count_tanimoto} t from public.mols where m@>'{self.mol_smi}' "
                     f"order by t DESC{ limit}"
@@ -76,7 +78,7 @@ class SearchTime:
         first_in: bool = True,
         fp_type: Union[bool, str] = False,
         sort_by_similarity: bool = False,
-        limit:  Union[int, str] = ""
+        limit: Union[int, str] = "",
     ) -> float:
         query = str(
             GetQuery(
@@ -84,7 +86,7 @@ class SearchTime:
                 search_type=search_type,
                 fp_type=fp_type,
                 sort_by_similarity=sort_by_similarity,
-                limit=limit
+                limit=limit,
             )
         )
         if first_in:
