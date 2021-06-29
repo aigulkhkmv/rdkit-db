@@ -4,8 +4,7 @@ from typing import Union
 
 import psycopg2
 from pony.orm import Database, Required, PrimaryKey, db_session
-
-from postgresql_db import GetQuery
+from loguru import logger
 
 
 @dataclass()
@@ -54,6 +53,36 @@ class GetQuery:
             pass
 
 
+def pony_db_map(db_name, user_name):
+    db = Database()
+
+    class Fps(db.Entity):
+        _table_ = "fps"
+        id = PrimaryKey(int, auto=True)
+        torsionbv = Required(int)
+        mfp2 = Required(int)
+        ffp2 = Required(int)
+
+    class Mols(db.Entity):
+        _table_ = "mols"
+        id = PrimaryKey(int, auto=True)
+        m = Required(str)
+
+    class Raw_data(db.Entity):
+        _table_ = "raw_data"
+        id = PrimaryKey(int, auto=True)
+        smiles = Required(str)
+
+    class Test_class(db.Entity):
+        _table_ = "test_class"
+        id = PrimaryKey(int, auto=True)
+        test = Required(str)
+
+    db.bind(provider="postgres", user=user_name, host="localhost", database=db_name)
+    db.generate_mapping(create_tables=True)
+    return db
+
+
 class SearchTimePostgres:
     def __init__(self, database_name: str):
         self.database_name = database_name
@@ -98,34 +127,33 @@ class SearchTimePostgres:
             return self.get_fetchall_time(query)
 
 
-def pony_db_map(db_name, user_name):
-    db = Database()
+class SearchTimeCursor(SearchTimePostgres):
+    def get_time(self, query: str, limit: int) -> float:
+        start_time = time()
+        self.curs.execute(query)
+        logger.info("Result {}", self.curs.fetchmany(size=limit))
+        end_time = time()
+        return end_time - start_time
 
-    class Fps(db.Entity):
-        _table_ = "fps"
-        id = PrimaryKey(int, auto=True)
-        torsionbv = Required(int)
-        mfp2 = Required(int)
-        ffp2 = Required(int)
-
-    class Mols(db.Entity):
-        _table_ = "mols"
-        id = PrimaryKey(int, auto=True)
-        m = Required(str)
-
-    class Raw_data(db.Entity):
-        _table_ = "raw_data"
-        id = PrimaryKey(int, auto=True)
-        smiles = Required(str)
-
-    class Test_class(db.Entity):
-        _table_ = "test_class"
-        id = PrimaryKey(int, auto=True)
-        test = Required(str)
-
-    db.bind(provider="postgres", user=user_name, host="localhost", database=db_name)
-    db.generate_mapping(create_tables=True)
-    return db
+    def get(
+        self,
+        mol_smi: str,
+        search_type: str,
+        first_in: Union[bool, str] = "",
+        fp_type: Union[bool, str] = False,
+        sort_by_similarity: bool = False,
+        limit: int = 1,
+    ) -> float:
+        query = str(
+            GetQuery(
+                mol_smi=mol_smi,
+                search_type=search_type,
+                fp_type=fp_type,
+                sort_by_similarity=sort_by_similarity,
+                limit="",
+            )
+        )
+        return self.get_time(query, limit)
 
 
 class SearchTimePony:
@@ -135,13 +163,15 @@ class SearchTimePony:
         self.db = pony_db_map(self.database_name, self.user_name)
 
     @db_session
-    def get(self,
-            mol_smi: str,
-            search_type: str,
-            fp_type: Union[bool, str] = False,
-            sort_by_similarity: bool = False,
-            limit: Union[int, str] = "",
-            ):
+    def get(
+        self,
+        mol_smi: str,
+        search_type: str,
+        fp_type: Union[bool, str] = False,
+        sort_by_similarity: bool = False,
+        limit: Union[int, str] = "",
+    ):
+        logger.info("Pony search..")
         postgresql_query = GetQuery(
             mol_smi=mol_smi,
             search_type=search_type,
@@ -149,8 +179,16 @@ class SearchTimePony:
             sort_by_similarity=sort_by_similarity,
             limit=limit,
         )
+        logger.info(
+            "Query for {} search, fp type {}, sort by similatity {} postgresql: {}",
+            search_type,
+            fp_type,
+            sort_by_similarity,
+            postgresql_query,
+        )
         start_time = time()
         res = self.db.execute(str(postgresql_query))
-        [i for i in res]
+        logger.info([i[1] for i in res])
+
         end_time = time()
-        return end_time-start_time
+        return end_time - start_time
