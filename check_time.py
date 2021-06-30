@@ -69,13 +69,18 @@ def get_time_and_count(
         logger.info("Time for similarity search {}", similarity_mfp2_time)
 
         logger.info("Start sorted similarity search for mol {}", mol_smi)
-        sorted_similarity_mfp2_time = chembl_db_time.get(
+        (
+            sorted_similarity_mfp2_time,
+            count_sorted_similarity_mfp2,
+        ) = chembl_db_time.get_time_and_count(
             mol_smi=mol_smi,
             search_type="similarity",
             fp_type="mfp2",
             sort_by_similarity=True,
+            limit=limit,
         )
         sorted_similarity_mfp2.append(sorted_similarity_mfp2_time)
+        sorted_similarity_mfp2_count.append(count_sorted_similarity_mfp2)
         logger.info("Time for sorted similarity search {}", sorted_similarity_mfp2_time)
 
     time_res = {

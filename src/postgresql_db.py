@@ -30,7 +30,7 @@ class GetQuery:
                 return f"select * from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}')"
             else:
                 if self.fp_type == "mfp2":
-                    return f"select * from get_mfp2_neighbors('{self.mol_smi}')"
+                    return f"select id, tanimoto_sml({self.fp_type}, {function_name}('{self.mol_smi}')) t from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}') order by t DESC"
 
         if self.search_type == "substructure":
             if not self.sort_by_similarity:
@@ -94,6 +94,7 @@ class SearchTimeCursor:
         limit: int = 1,
     ) -> Tuple[float, int]:
         logger.info("Postgresql search... ")
+
         query = str(
             GetQuery(
                 mol_smi=mol_smi,
