@@ -31,10 +31,8 @@ Add molecules, gist-index and fingerprints to the database. In postgresql consol
 $ select * into mols from (select id,mol_from_smiles(smiles::cstring) m from raw_data) tmp where m is not null;
 $ create index molidx on public.mols using gist(m);
 $ alter table mols  add primary key (id);
-$ select id,torsionbv_fp(m) as torsionbv,morganbv_fp(m) as mfp2,featmorganbv_fp(m) as ffp2 into public.fps from mols;
-$ create index fps_ttbv_idx on public.fps using gist(torsionbv);
+$ select id,morganbv_fp(m) as mfp2 into public.fps from mols;
 $ create index fps_mfp2_idx on public.fps using gist(mfp2);
-$ create index fps_ffp2_idx on public.fps using gist(ffp2);
 $ alter table public.fps add primary key (id);
 ```
 
