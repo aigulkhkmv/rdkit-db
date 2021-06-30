@@ -13,9 +13,9 @@ $ conda install -c rdkit rdkit-postgresql
 $ work_env/bin/initdb -D path/to/chembl_28
 $ work_env/bin/pg_ctl -D path/to/chembl_28 -l logfile start
 # change postgresql configuration (postgresql.conf)
-#synchronous_commit = off # immediate fsync at commit
-#full_page_writes = off # recover from partial page writes
-#shared_buffers = 2048MB # min 128kB
+# synchronous_commit = off # immediate fsync at commit
+# full_page_writes = off # recover from partial page writes
+# shared_buffers = 2048MB # min 128kB
 $ work_env/bin/createdb chembl_28
 # extract db
 $ work_env/bin/psql -c 'create extension rdkit' chembl_28
@@ -35,7 +35,11 @@ $ select id,torsionbv_fp(m) as torsionbv,morganbv_fp(m) as mfp2,featmorganbv_fp(
 $ create index fps_ttbv_idx on public.fps using gist(torsionbv);
 $ create index fps_mfp2_idx on public.fps using gist(mfp2);
 $ create index fps_ffp2_idx on public.fps using gist(ffp2);
-$  alter table public.fps add primary key (id);
+$ alter table public.fps add primary key (id);
 ```
 
-Postgresql dump from the ChEMBL website ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest
+Run script with time check:
+```bash
+$ python3 check_time.py  db_name user_name path_to_test_mols.json search_type path_save_results.xlsx
+```
+search_type: postgres/pony

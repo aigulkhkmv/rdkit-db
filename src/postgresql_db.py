@@ -49,7 +49,7 @@ class GetQuery:
             pass
 
 
-def pony_db_map(db_name, user_name):
+def pony_db_map(db_name: str, user_name: str) -> Database:
     db = Database()
 
     class Fps(db.Entity):
@@ -106,9 +106,7 @@ class SearchTimeCursor:
         self.curs.execute(query)
         query_res = self.curs.fetchmany(size=limit)
         end_time = time()
-        # TODO add count
-        logger.info(query_res)
-        return end_time - start_time, query_res
+        return end_time - start_time, len(query_res)
 
 
 class SearchPony:
@@ -142,6 +140,6 @@ class SearchPony:
         )
         start_time = time()
         res = self.db.execute(str(postgresql_query))
-        query_res = len(res.fetchmany(size=limit))
+        query_res = res.fetchmany(size=limit)
         end_time = time()
-        return end_time - start_time, query_res
+        return end_time - start_time, len(query_res)

@@ -1,23 +1,26 @@
 import json
 import sys
+from pathlib import Path
+from typing import Tuple
 
+import click
 import pandas as pd
 from loguru import logger
 
-sys.path.append("/Users/aigul/Desktop/work/rdkit-db")
+sys.path.append("~rdkit-db")
 from src.postgresql_db import SearchPony, SearchTimeCursor
 
 
 def get_time_and_count(
-    db_name: str, user_name: str, test_mols_path: str, search_type: str, limit: int
-):
+    db_name: str, user_name: str, test_mols_path: Path, search_type: str, limit: int
+) -> Tuple[dict, dict]:
     logger.info("{} search", search_type)
     if search_type == "pony":
         chembl_db_time = SearchPony(db_name, user_name)
     elif search_type == "postgres":
         chembl_db_time = SearchTimeCursor(db_name)
 
-    with open(test_mols_path, "r") as test_mols:
+    with test_mols_path.open("r") as test_mols:
         test_mols = json.load(test_mols)
     logger.info("Read test mols")
 
@@ -62,7 +65,6 @@ def get_time_and_count(
             limit=limit,
         )
         similarity_mfp2.append(similarity_mfp2_time)
-        logger.info("!!!!!!!!!!!!!{}", count_similarity_mfp2)
         similarity_mfp2_count.append(count_similarity_mfp2)
         logger.info("Time for similarity search {}", similarity_mfp2_time)
 
@@ -89,18 +91,28 @@ def get_time_and_count(
         f"count substructure {limit}": substructure_search_count,
         f"count sorted mfp substructure {limit}": sorted_mfp_substructure_count,
         f"count similarity mfp2 {limit}": similarity_mfp2_count,
-        # TODO add count similarity
+        f"count sorted similarity mfp2 {limit}": sorted_similarity_mfp2_count,
     }
 
     return time_res, count_res
 
 
-def get_time_with_limits(db_name, user, test_mols, search_type, path_to_save):
+@click.command()
+@click.argument("db_name")
+@click.argument("user")
+@click.argument("test_mols_path", type=Path)
+@click.argument("search_type")
+@click.argument("path_to_save", type=Path)
+def get_time_with_limits(
+    db_name: str, user: str, test_mols_path: Path, search_type: str, path_to_save: Path
+) -> None:
     limits = [1, 10, 100, 1000, 20000000]
     res_limits = []
     res_counts = []
     for limit in limits:
-        res_lim, res_count = get_time_and_count(db_name, user, test_mols, search_type, limit=limit)
+        res_lim, res_count = get_time_and_count(
+            db_name, user, test_mols_path, search_type, limit=limit
+        )
         res_limits.append(res_lim)
         res_counts.append(res_count)
 
@@ -117,8 +129,8 @@ def get_time_with_limits(db_name, user, test_mols, search_type, path_to_save):
         **res_counts[4],
     }
     df = pd.DataFrame(final_dict)
-    df.to_excel(path_to_save)
+    df.to_excel(path_to_save.as_posix())
 
 
 if __name__ == "__main__":
-    get_time_with_limits("chembl_test", "aigul", "test_mols.json", "postgres", "test_postgres.xlsx")
+    get_time_with_limits()
