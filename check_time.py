@@ -111,7 +111,7 @@ def get_time_and_count(
 def get_time_with_limits(
     db_name: str, user: str, test_mols_path: Path, search_type: str, path_to_save: Path
 ) -> None:
-    limits = [1, 10, 100, 1000, 20000000]
+    limits = [1, 10, 100, 1000, 21000000]
     res_limits = []
     res_counts = []
     for limit in limits:
