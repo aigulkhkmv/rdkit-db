@@ -11,14 +11,25 @@ sys.path.append("~rdkit-db")
 from src.postgresql_db import SearchPony, SearchTimeCursor
 
 
-def get_time_and_count(
-    db_name: str, user_name: str, test_mols_path: Path, search_type: str, limit: int
+def get_all_time_and_count(
+    db_name: str,
+    user_name: str,
+    test_mols_path: Path,
+    search_type: str,
+    limit: int,
+    port: int,
+    password=None,
 ) -> Tuple[dict, dict]:
     logger.info("{} search", search_type)
     if search_type == "pony":
         chembl_db_time = SearchPony(db_name, user_name)
     elif search_type == "postgres":
-        chembl_db_time = SearchTimeCursor(db_name)
+        if password:
+            chembl_db_time = SearchTimeCursor(
+                port=port, dbname=db_name, user=user_name, password=password
+            )
+        else:
+            chembl_db_time = SearchTimeCursor(port=port, dbname=db_name, user=user_name)
 
     with test_mols_path.open("r") as test_mols:
         test_mols = json.load(test_mols)
@@ -105,22 +116,32 @@ def get_time_and_count(
 @click.command()
 @click.argument("db_name")
 @click.argument("user")
+@click.argument("port")
 @click.argument("test_mols_path", type=Path)
 @click.argument("search_type")
 @click.argument("path_to_save", type=Path)
+@click.argument("password", required=False)
 def get_time_with_limits(
-    db_name: str, user: str, test_mols_path: Path, search_type: str, path_to_save: Path
+    db_name: str,
+    user: str,
+    port: int,
+    test_mols_path: Path,
+    search_type: str,
+    path_to_save: Path,
+    password=None,
 ) -> None:
     limits = [1, 10, 100, 1000, 21000000]
+    limits = [1, 10]
     res_limits = []
     res_counts = []
     for limit in limits:
-        res_lim, res_count = get_time_and_count(
-            db_name, user, test_mols_path, search_type, limit=limit
+        res_lim, res_count = get_all_time_and_count(
+            db_name, user, test_mols_path, search_type, limit, port, password
         )
         res_limits.append(res_lim)
         res_counts.append(res_count)
-
+    logger.warning(res_limits)
+    logger.warning(res_counts)
     final_dict = {
         **res_limits[0],
         **res_limits[1],

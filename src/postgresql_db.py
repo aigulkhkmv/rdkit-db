@@ -55,9 +55,7 @@ def pony_db_map(db_name: str, user_name: str) -> Database:
     class Fps(db.Entity):
         _table_ = "fps"
         id = PrimaryKey(int, auto=True)
-        torsionbv = Required(int)
         mfp2 = Required(int)
-        ffp2 = Required(int)
 
     class Mols(db.Entity):
         _table_ = "mols"
@@ -69,20 +67,24 @@ def pony_db_map(db_name: str, user_name: str) -> Database:
         id = PrimaryKey(int, auto=True)
         smiles = Required(str)
 
-    class Test_class(db.Entity):
-        _table_ = "test_class"
-        id = PrimaryKey(int, auto=True)
-        test = Required(str)
-
     db.bind(provider="postgres", user=user_name, host="localhost", database=db_name)
     db.generate_mapping(create_tables=True)
     return db
 
 
 class SearchTimeCursor:
-    def __init__(self, database_name: str):
-        self.database_name = database_name
-        conn = psycopg2.connect(database=self.database_name)
+    def __init__(self, **kwargs):
+        conn_params = (
+            f"port={kwargs['port']} "
+            f"dbname={kwargs['dbname']} "
+            f"host=localhost "
+            f"user={kwargs['user']} "
+        )
+
+        if kwargs["password"]:
+            conn_params = f"{conn_params} password={kwargs['password']}"
+        conn = psycopg2.connect(conn_params)
+        logger.info(conn, "connection")
         self.curs = conn.cursor()
 
     def get_time_and_count(
