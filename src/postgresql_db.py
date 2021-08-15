@@ -27,10 +27,16 @@ class GetQuery:
         if self.search_type == "similarity":
             function_name = self.get_fp_function_name
             if not self.sort_by_similarity:
+                logger.info(
+                    f"select * from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}')"
+                )
                 return f"select * from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}')"
             else:
                 if self.fp_type == "mfp2":
-                    return f"select id, tanimoto_sml({self.fp_type}, {function_name}('{self.mol_smi}')) t from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}') order by t DESC"
+                    return (
+                        f"select id, tanimoto_sml({self.fp_type}, {function_name}('{self.mol_smi}')) t "
+                        f"from public.fps where {self.fp_type}%{function_name}('{self.mol_smi}') order by t DESC"
+                    )
 
         if self.search_type == "substructure":
             if not self.sort_by_similarity:
@@ -49,7 +55,7 @@ class GetQuery:
             pass
 
 
-def pony_db_map(db_name: str, user_name: str) -> Database:
+def pony_db_map(db_name: str, user_name: str, db_port: int, db_password: str) -> Database:
     db = Database()
 
     class Fps(db.Entity):
@@ -67,7 +73,24 @@ def pony_db_map(db_name: str, user_name: str) -> Database:
         id = PrimaryKey(int, auto=True)
         smiles = Required(str)
 
-    db.bind(provider="postgres", user=user_name, host="localhost", database=db_name)
+    if db_password:
+        db.bind(
+            provider="postgres",
+            user=user_name,
+            host="localhost",
+            database=db_name,
+            port=db_port,
+            password=db_password,
+        )
+    else:
+        db.bind(
+            provider="postgres",
+            user=user_name,
+            host="localhost",
+            database=db_name,
+            port=db_port,
+        )
+
     db.generate_mapping(create_tables=True)
     return db
 
@@ -78,13 +101,16 @@ class SearchTimeCursor:
             f"port={kwargs['port']} "
             f"dbname={kwargs['dbname']} "
             f"host=localhost "
-            f"user={kwargs['user']} "
+            f"user={kwargs['user']}"
         )
 
         if kwargs["password"]:
             conn_params = f"{conn_params} password={kwargs['password']}"
+        logger.info(conn_params, "connection params")
         conn = psycopg2.connect(conn_params)
-        logger.info(conn, "connection")
+        # loguru doesn't work in this case (AttributeError: 'psycopg2.extensions.connection' object has no attribute
+        # 'format')
+        print(conn, "connection")
         self.curs = conn.cursor()
 
     def get_time_and_count(
@@ -113,10 +139,10 @@ class SearchTimeCursor:
 
 
 class SearchPony:
-    def __init__(self, database_name: str, user_name: str):
+    def __init__(self, database_name: str, user_name: str, db_port: int, db_password: str):
         self.database_name = database_name
         self.user_name = user_name
-        self.db = pony_db_map(self.database_name, self.user_name)
+        self.db = pony_db_map(self.database_name, self.user_name, db_port, db_password)
 
     @db_session
     def get_time_and_count(
