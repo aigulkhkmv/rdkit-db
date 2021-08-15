@@ -20,9 +20,9 @@ def get_all_time_and_count(
     port: int,
     password=None,
 ) -> Tuple[dict, dict]:
-    logger.info("{} search", search_type)
+    logger.info("{} search with limit {}", search_type, limit)
     if search_type == "pony":
-        chembl_db_time = SearchPony(db_name, user_name)
+        chembl_db_time = SearchPony(db_name, user_name, port, password)
     elif search_type == "postgres":
         if password:
             chembl_db_time = SearchTimeCursor(
@@ -131,7 +131,6 @@ def get_time_with_limits(
     password=None,
 ) -> None:
     limits = [1, 10, 100, 1000, 21000000]
-    limits = [1, 10]
     res_limits = []
     res_counts = []
     for limit in limits:
@@ -140,8 +139,8 @@ def get_time_with_limits(
         )
         res_limits.append(res_lim)
         res_counts.append(res_count)
-    logger.warning(res_limits)
-    logger.warning(res_counts)
+    logger.info(res_limits)
+    logger.info(res_counts)
     final_dict = {
         **res_limits[0],
         **res_limits[1],
