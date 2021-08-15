@@ -134,7 +134,6 @@ class SearchTimeCursor:
         start_time = time()
         self.curs.execute(query)
         query_res = self.curs.fetchmany(size=limit)
-        logger.info("Similarity results {} !!!", query_res)
         end_time = time()
         return end_time - start_time, len(query_res)
 
