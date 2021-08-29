@@ -20,6 +20,9 @@ def get_all_time_and_count(
     port: int,
     password=None,
 ) -> Tuple[dict, dict]:
+    """
+    Searches by substructure and similarity for target molecules.
+    """
     logger.info("{} search with limit {}", search_type, limit)
     if search_type == "pony":
         chembl_db_time = SearchPony(db_name, user_name, port, password)
@@ -130,6 +133,10 @@ def get_time_with_limits(
     path_to_save: Path,
     password=None,
 ) -> None:
+    """
+    Searches the database for the specified molecules and saves 
+    the search time to a excel file.
+    """
     limits = [1, 10, 100, 1000, 21000000]
     res_limits = []
     res_counts = []
