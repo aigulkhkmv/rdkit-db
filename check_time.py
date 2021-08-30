@@ -134,8 +134,7 @@ def get_time_with_limits(
     password=None,
 ) -> None:
     """
-    Searches the database for the specified molecules and saves 
-    the search time to a excel file.
+    Searches the database for the specified molecules and saves the search time to a excel file.
     """
     limits = [1, 10, 100, 1000, 21000000]
     res_limits = []
