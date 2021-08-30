@@ -12,13 +12,13 @@ from src.postgresql_db import SearchPony, SearchTimeCursor
 
 
 def get_all_time_and_count(
-    db_name: str,
-    user_name: str,
-    test_mols_path: Path,
-    search_type: str,
-    limit: int,
-    port: int,
-    password=None,
+        db_name: str,
+        user_name: str,
+        test_mols_path: Path,
+        search_type: str,
+        limit: int,
+        port: int,
+        password=None,
 ) -> Tuple[dict, dict]:
     """
     Searches by substructure and similarity for target molecules.
@@ -125,13 +125,13 @@ def get_all_time_and_count(
 @click.argument("path_to_save", type=Path)
 @click.argument("password", required=False)
 def get_time_with_limits(
-    db_name: str,
-    user: str,
-    port: int,
-    test_mols_path: Path,
-    search_type: str,
-    path_to_save: Path,
-    password=None,
+        db_name: str,
+        user: str,
+        port: int,
+        test_mols_path: Path,
+        search_type: str,
+        path_to_save: Path,
+        password=None,
 ) -> None:
     """
     Searches the database for the specified molecules and saves the search time to a excel file.
