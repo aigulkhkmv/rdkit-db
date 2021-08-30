@@ -24,6 +24,9 @@ class GetQuery:
         return function_name
 
     def __str__(self) -> str:
+        """
+        Generates a query to the database.
+        """
         if self.search_type == "similarity":
             function_name = self.get_fp_function_name
             if not self.sort_by_similarity:
@@ -56,6 +59,9 @@ class GetQuery:
 
 
 def pony_db_map(db_name: str, user_name: str, db_port: int, db_password: str) -> Database:
+    """
+    Creates classes for PonyORM.
+    """
     db = Database()
 
     class Fps(db.Entity):
@@ -97,6 +103,9 @@ def pony_db_map(db_name: str, user_name: str, db_port: int, db_password: str) ->
 
 class SearchTimeCursor:
     def __init__(self, **kwargs):
+        """
+        Database connection.
+        """
         conn_params = (
             f"port={kwargs['port']} "
             f"dbname={kwargs['dbname']} "
@@ -121,8 +130,11 @@ class SearchTimeCursor:
         sort_by_similarity: bool = False,
         limit: int = 1,
     ) -> Tuple[float, int]:
+        """
+        Counts time for search by PostgreSQL. 
+        Returns search time and count mols from query.
+        """
         logger.info("Postgresql search... ")
-
         query = str(
             GetQuery(
                 mol_smi=mol_smi,
@@ -140,6 +152,9 @@ class SearchTimeCursor:
 
 class SearchPony:
     def __init__(self, database_name: str, user_name: str, db_port: int, db_password: str):
+        """
+        Database connection.
+        """
         self.database_name = database_name
         self.user_name = user_name
         self.db = pony_db_map(self.database_name, self.user_name, db_port, db_password)
@@ -153,6 +168,10 @@ class SearchPony:
         sort_by_similarity: bool = False,
         limit: Union[int, str] = "",
     ) -> Tuple[float, int]:
+        """
+        Counts time for search by PonyORM. 
+        Returns search time and count mols from query.
+        """
         logger.info("Pony search..")
         postgresql_query = GetQuery(
             mol_smi=mol_smi,
